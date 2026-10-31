@@ -1,0 +1,28 @@
+name: Shift-Left Data Contract CI Gate
+
+on:
+  pull_request:
+    paths:
+      - 'config/contracts/**'
+
+jobs:
+  contract-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ValidateX
+        run: pip install validatex>=1.3.0
+
+      - name: Validate Contract Definitions
+        run: |
+          validatex contract lint config/contracts/markets_contract.yaml
+          validatex contract lint config/contracts/ticks_contract.yaml

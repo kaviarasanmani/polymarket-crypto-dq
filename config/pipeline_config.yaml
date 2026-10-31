@@ -1,0 +1,36 @@
+pipeline:
+  name: polymarket_crypto_dq
+  environment: production
+  default_engine: polars
+  coins:
+    - BTC
+    - ETH
+    - SOL
+    - XRP
+    - DOGE
+    - HYPE
+    - BNB
+
+paths:
+  raw_dir: data/raw
+  bronze_dir: data/bronze
+  silver_dir: data/silver
+  gold_dir: data/gold
+  gold_duckdb_path: data/gold/polymarket_analytics.duckdb
+  run_store_path: data/observability/runs.db
+  reports_dir: data/observability/reports
+
+contracts:
+  markets_contract: config/contracts/markets_contract.yaml
+  ticks_contract: config/contracts/ticks_contract.yaml
+
+quality:
+  min_acceptable_score: 90.0
+  target_score: 98.0
+  max_critical_failures: 0
+  freshness_max_age_hours: 48
+  volume_anomaly_z_threshold: 3.5
+
+dashboard:
+  port: 8501
+  theme: dark

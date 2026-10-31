@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  pipeline:
+    build: .
+    container_name: polymarket-dq-pipeline
+    command: python -m src.pipeline.orchestrator run --coins BTC,ETH,SOL
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+
+  dashboard:
+    build: .
+    container_name: polymarket-dq-dashboard
+    command: streamlit run src/dashboard/app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    depends_on:
+      - pipeline
+    restart: unless-stopped

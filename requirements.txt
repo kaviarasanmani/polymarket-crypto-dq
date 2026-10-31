@@ -1,0 +1,14 @@
+validatex>=1.3.0
+polars>=1.0.0
+duckdb>=1.0.0
+pyarrow>=14.0.0
+pandas>=2.0.0
+pyyaml>=6.0
+plotly>=5.18.0
+streamlit>=1.30.0
+click>=8.1.0
+pytest>=8.0.0
+pytest-mock>=3.12.0
+python-dateutil>=2.8.2
+requests>=2.31.0
+tqdm>=4.66.0

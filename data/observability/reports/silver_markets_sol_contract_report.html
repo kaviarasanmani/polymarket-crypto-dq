@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValidateX Report — polymarket_5min_markets</title>
+<style>
+
+:root {
+  --bg: #0f0f1a;
+  --surface: #1a1a2e;
+  --surface2: #232340;
+  --border: #2d2d50;
+  --text: #e0e0ff;
+  --text-dim: #8888aa;
+  --accent: #6c63ff;
+  --accent-glow: rgba(108, 99, 255, 0.3);
+  --success: #00e676;
+  --success-bg: rgba(0, 230, 118, 0.08);
+  --failure: #ff5252;
+  --failure-bg: rgba(255, 82, 82, 0.08);
+  --warning: #ffc107;
+  --warning-bg: rgba(255, 193, 7, 0.08);
+  --info-blue: #42a5f5;
+  --info-bg: rgba(66, 165, 245, 0.08);
+  --radius: 12px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Segoe UI','Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+.container { max-width:1280px; margin:0 auto; padding:32px 24px; }
+
+/* Header */
+.header { margin-bottom:28px; }
+.header-top { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; }
+.logo {
+  font-size:2.4rem; font-weight:800;
+  background: linear-gradient(135deg, var(--accent), #a78bfa, #f472b6);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  letter-spacing:-1px;
+}
+.subtitle { color:var(--text-dim); font-size:.95rem; }
+
+/* Download bar */
+.download-bar { display:flex; gap:8px; flex-wrap:wrap; }
+.dl-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 18px; border-radius:24px;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--text); cursor:pointer; font-size:.85rem;
+  transition:all .2s;
+}
+.dl-btn:hover { background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 0 16px var(--accent-glow); }
+.dl-icon { font-size:1rem; }
+
+/* Top row: status + quality score */
+.top-row { display:grid; grid-template-columns:1fr 280px; gap:16px; margin-bottom:24px; }
+@media(max-width:700px){ .top-row{grid-template-columns:1fr;} }
+
+/* Status Banner */
+.status-banner {
+  padding:24px 32px; border-radius:var(--radius);
+  display:flex; align-items:center; justify-content:center; gap:16px;
+  font-size:1.5rem; font-weight:700; box-shadow:var(--shadow);
+}
+.status-banner.success {
+  background:linear-gradient(135deg,rgba(0,230,118,.12),rgba(0,230,118,.04));
+  border:1px solid rgba(0,230,118,.25); color:var(--success);
+}
+.status-banner.failure {
+  background:linear-gradient(135deg,rgba(255,82,82,.12),rgba(255,82,82,.04));
+  border:1px solid rgba(255,82,82,.25); color:var(--failure);
+}
+.status-icon { font-size:2rem; }
+
+/* Quality Score Card */
+.quality-score-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:20px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  box-shadow:var(--shadow); text-align:center;
+}
+.qs-label { font-size:.72rem; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim); margin-bottom:4px; }
+.qs-value { font-size:2.8rem; font-weight:900; line-height:1; }
+.qs-max { font-size:.9rem; color:var(--text-dim); margin-bottom:8px; }
+.score-high .qs-value { color:var(--success); }
+.score-mid  .qs-value { color:var(--warning); }
+.score-low  .qs-value { color:var(--failure); }
+.qs-bar-bg { width:100%; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+.qs-bar-fill { height:100%; border-radius:3px; transition:width 1.5s ease; }
+.score-high .qs-bar-fill { background:linear-gradient(90deg,var(--success),#66bb6a); }
+.score-mid  .qs-bar-fill { background:linear-gradient(90deg,var(--warning),#ffca28); }
+.score-low  .qs-bar-fill { background:linear-gradient(90deg,var(--failure),#ef5350); }
+
+/* Stats Grid */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px; margin-bottom:24px; }
+.stat-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:18px; text-align:center;
+  box-shadow:var(--shadow); transition:transform .2s,box-shadow .2s;
+}
+.stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,.5); }
+.stat-value { font-size:1.8rem; font-weight:800; margin-bottom:2px; }
+.stat-value.passed { color:var(--success); }
+.stat-value.failed { color:var(--failure); }
+.stat-value.errors { color:var(--warning); }
+.stat-value.total  { color:var(--accent); }
+.stat-value.rate   { background:linear-gradient(135deg,var(--accent),#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.stat-label { color:var(--text-dim); font-size:.78rem; text-transform:uppercase; letter-spacing:1px; }
+
+/* Progress Bar */
+.progress-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:24px; box-shadow:var(--shadow); }
+.progress-bar-bg { height:14px; background:var(--surface2); border-radius:7px; overflow:hidden; margin-top:6px; }
+.progress-bar-fill { height:100%; border-radius:7px; background:linear-gradient(90deg,var(--success),#66bb6a); transition:width 1.5s ease; }
+.progress-bar-fill.low { background:linear-gradient(90deg,var(--failure),#ef5350); }
+.progress-labels { display:flex; justify-content:space-between; font-size:.82rem; color:var(--text-dim); }
+
+/* Meta Grid */
+.meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:24px; }
+.meta-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
+.meta-key { color:var(--text-dim); font-size:.78rem; text-transform:uppercase; letter-spacing:.5px; }
+.meta-val { font-weight:600; }
+
+/* Section Card */
+.section-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); margin-bottom:24px; }
+.section-card h2 { padding:16px 20px; font-size:1.1rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+
+/* Alert Banner */
+.alert-banner { border-color:rgba(255,82,82,.45); }
+.alert-list { padding:14px 20px; display:flex; flex-direction:column; gap:8px; }
+.alert-item { font-size:.9rem; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+/* Historical Trend Card */
+.trend-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; padding:16px 20px 8px; }
+.trend-kpi { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; }
+.trend-chart-wrap { padding:8px 20px 18px; }
+.trend-svg { width:100%; height:auto; max-height:240px; display:block; background:rgba(15,15,26,.45); border:1px solid var(--border); border-radius:8px; }
+.history-sub { border-top:1px solid var(--border); padding-top:12px; }
+.history-sub h3 { padding:8px 20px 12px; font-size:.95rem; color:var(--text-dim); }
+.badge.info { background:var(--info-bg); color:var(--info-blue); border:1px solid rgba(66,165,245,.25); }
+
+/* Column Health Table */
+.col-health-wrap { overflow-x:auto; }
+.col-health-table { width:100%; border-collapse:collapse; }
+.col-health-table thead th { text-align:left; padding:10px 14px; font-size:.72rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); background:var(--surface2); border-bottom:1px solid var(--border); }
+.col-health-table tbody td { padding:10px 14px; border-bottom:1px solid var(--border); font-size:.88rem; }
+.col-health-table tbody tr:hover { background:rgba(108,99,255,.04); }
+.col-name { font-weight:600; }
+.center { text-align:center; }
+.passed-text { color:var(--success); }
+.failed-text { color:var(--failure); }
+.health-cell { display:flex; align-items:center; gap:8px; }
+
+/* Mini bars */
+.mini-bar-bg { height:6px; flex:1; min-width:50px; max-width:100px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+.mini-bar-fill { height:100%; border-radius:3px; transition:width .8s ease; }
+.bar-high { background:var(--success); color:var(--success); }
+.bar-mid  { background:var(--warning); color:var(--warning); }
+.bar-low  { background:var(--failure); color:var(--failure); }
+.mt4 { margin-top:4px; }
+
+/* Drift card */
+.drift-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:24px; box-shadow:var(--shadow); }
+.drift-card h2 { font-size:1.1rem; margin-bottom:8px; }
+.drift-hint { color:var(--text-dim); font-size:.88rem; line-height:1.7; }
+.drift-hint code { background:var(--surface2); padding:2px 8px; border-radius:4px; font-size:.82rem; color:var(--accent); }
+
+/* Filter Buttons */
+.filters { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+.filter-btn { padding:7px 18px; border-radius:24px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; font-size:.85rem; transition:all .2s; }
+.filter-btn:hover,.filter-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 0 16px var(--accent-glow); }
+.filter-sep { color:var(--text-dim); margin:0 4px; }
+
+/* Results Table */
+.results-table { width:100%; border-collapse:collapse; }
+.results-table thead th { text-align:left; padding:12px 14px; font-size:.72rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); background:var(--surface2); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+.results-table tbody tr { border-bottom:1px solid var(--border); transition:background .15s; }
+.results-table tbody tr:hover { background:rgba(108,99,255,.04); }
+.results-table td { padding:10px 14px; font-size:.88rem; vertical-align:top; }
+.obs-col { max-width:260px; word-break:break-word; }
+
+/* Severity badges */
+.sev-badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+.sev-critical { background:rgba(255,82,82,.12); color:var(--failure); border:1px solid rgba(255,82,82,.25); }
+.sev-warning  { background:rgba(255,193,7,.12);  color:var(--warning); border:1px solid rgba(255,193,7,.25); }
+.sev-info     { background:rgba(66,165,245,.12);  color:var(--info-blue); border:1px solid rgba(66,165,245,.25); }
+
+/* Status badge */
+.badge { display:inline-block; padding:3px 12px; border-radius:20px; font-size:.72rem; font-weight:700; text-transform:uppercase; }
+.badge.passed { background:var(--success-bg); color:var(--success); border:1px solid rgba(0,230,118,.2); }
+.badge.failed { background:var(--failure-bg); color:var(--failure); border:1px solid rgba(255,82,82,.2); }
+.badge.error  { background:var(--warning-bg); color:var(--warning); border:1px solid rgba(255,193,7,.2); }
+
+.details-toggle { color:var(--accent); cursor:pointer; font-size:.82rem; text-decoration:underline; }
+.details-content { display:none; margin-top:8px; padding:10px; background:var(--surface2); border-radius:8px; font-family:'Cascadia Code','Fira Code',monospace; font-size:.78rem; white-space:pre-wrap; word-break:break-all; color:var(--text-dim); max-height:200px; overflow-y:auto; }
+.details-content.open { display:block; }
+.unexpected-list { margin-top:4px; padding:4px 10px; background:rgba(255,82,82,.06); border-radius:6px; font-size:.78rem; color:var(--failure); max-height:80px; overflow-y:auto; }
+.err-text { color:var(--warning); font-size:.82rem; }
+.dim { color:var(--text-dim); }
+
+/* Footer */
+.footer { text-align:center; padding:28px 0 12px; color:var(--text-dim); font-size:.78rem; }
+.footer a { color:var(--accent); text-decoration:none; }
+
+/* Animations */
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.animate { animation:fadeUp .5s ease forwards; opacity:0; }
+.delay-1 { animation-delay:.1s; }
+.delay-2 { animation-delay:.2s; }
+.delay-3 { animation-delay:.3s; }
+.delay-4 { animation-delay:.4s; }
+
+/* Toast notification */
+.toast { position:fixed; bottom:24px; right:24px; background:var(--accent); color:#fff; padding:12px 24px; border-radius:var(--radius); font-size:.9rem; font-weight:600; box-shadow:0 4px 20px rgba(108,99,255,.4); opacity:0; transform:translateY(20px); transition:all .3s; z-index:1000; pointer-events:none; }
+.toast.show { opacity:1; transform:translateY(0); }
+
+@media(max-width:600px){
+  .logo{font-size:1.6rem}
+  .stat-value{font-size:1.3rem}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .top-row{grid-template-columns:1fr}
+  td{padding:6px 8px}
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header class="header animate">
+    <div class="header-top">
+      <div>
+        <div class="logo">ValidateX</div>
+        <div class="subtitle">Data Quality Validation Report</div>
+      </div>
+      <div class="download-bar">
+        <button class="dl-btn" onclick="downloadJSON()" title="Download JSON">
+          <span class="dl-icon">&#x2B07;</span> JSON
+        </button>
+        <button class="dl-btn" onclick="downloadCSV()" title="Download CSV">
+          <span class="dl-icon">&#x2B07;</span> CSV
+        </button>
+        <button class="dl-btn" onclick="copySummary()" id="copyBtn" title="Copy Summary">
+          <span class="dl-icon">&#x1F4CB;</span> Copy
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Status Banner + Quality Score -->
+  <div class="top-row animate delay-1">
+    <div class="status-banner success">
+      <span class="status-icon">✅</span>
+      <span>ALL PASSED</span>
+    </div>
+    <div class="quality-score-card score-high">
+      <div class="qs-label">DATA QUALITY SCORE</div>
+      <div class="qs-value">100.0</div>
+      <div class="qs-max">/ 100 (configured checks)</div>
+      <div class="qs-bar-bg"><div class="qs-bar-fill" style="width:100.0%"></div></div>
+    </div>
+  </div>
+
+  
+
+  <!-- Stats Grid -->
+  <div class="stats-grid animate delay-2">
+    <div class="stat-card">
+      <div class="stat-value total">36</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value passed">36</div>
+      <div class="stat-label">Passed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value failed">0</div>
+      <div class="stat-label">Failed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value errors">0</div>
+      <div class="stat-label">Errors</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value rate">100.0%</div>
+      <div class="stat-label">Success Rate</div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-wrap animate delay-2">
+    <div class="progress-labels">
+      <span>Validation Progress</span>
+      <span>100.0% passed</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill "
+           style="width:100.0%"></div>
+    </div>
+  </div>
+
+  <!-- Meta -->
+  <div class="meta-grid animate delay-3">
+    <div class="meta-item">
+      <span class="meta-key">Suite</span>
+      <span class="meta-val">polymarket_5min_markets</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-key">Engine</span>
+      <span class="meta-val">polars</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-key">Run Time</span>
+      <span class="meta-val">2026-10-31 05:45:23</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-key">Duration</span>
+      <span class="meta-val">0.003s</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-key">Column Coverage</span>
+      <span class="meta-val">10/14 (71.4%)</span>
+    </div>
+    <div class="meta-item"><span class="meta-key">Suite Version</span><span class="meta-val">1.0.0</span></div><div class="meta-item"><span class="meta-key">Owner</span><span class="meta-val">prediction_market_quant</span></div>
+  </div>
+
+  <!-- Column Health Summary -->
+  <div class="section-card animate delay-3">
+    <h2>&#x1F4CA; Column Health Summary</h2>
+    <div class="col-health-wrap">
+      <table class="col-health-table">
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>Checks</th>
+            <th>Passed</th>
+            <th>Failed</th>
+            <th>Health</th>
+            <th>Null %</th>
+            <th>Unique %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+  <td class="col-name">condition_id</td>
+  <td class="center">5</td>
+  <td class="center passed-text">5</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>0.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:0.0%"></div></div></td>
+  <td>100.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div></td>
+</tr>
+<tr>
+  <td class="col-name">liquidity</td>
+  <td class="center">4</td>
+  <td class="center passed-text">4</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>0.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:0.0%"></div></div></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td class="col-name">market_end</td>
+  <td class="center">4</td>
+  <td class="center passed-text">4</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>0.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:0.0%"></div></div></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td class="col-name">market_start</td>
+  <td class="center">4</td>
+  <td class="center passed-text">4</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>0.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:0.0%"></div></div></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td class="col-name">n_ticks</td>
+  <td class="center">4</td>
+  <td class="center passed-text">4</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>0.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:0.0%"></div></div></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td class="col-name">outcome</td>
+  <td class="center">2</td>
+  <td class="center passed-text">2</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr>
+  <td class="col-name">recorded_at</td>
+  <td class="center">3</td>
+  <td class="center passed-text">3</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>0.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:0.0%"></div></div></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td class="col-name">token_down</td>
+  <td class="center">3</td>
+  <td class="center passed-text">3</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>0.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:0.0%"></div></div></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td class="col-name">token_up</td>
+  <td class="center">3</td>
+  <td class="center passed-text">3</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>0.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:0.0%"></div></div></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td class="col-name">volume</td>
+  <td class="center">4</td>
+  <td class="center passed-text">4</td>
+  <td class="center failed-text">0</td>
+  <td>
+    <div class="health-cell">
+      <span class="bar-high">100.0%</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:100.0%"></div></div>
+    </div>
+  </td>
+  <td>0.0%<div class="mini-bar-bg"><div class="mini-bar-fill bar-high" style="width:0.0%"></div></div></td>
+  <td>—</td>
+</tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Historical Trends / Change From Last Run -->
+  <div class="drift-card animate delay-3">
+    <h2>&#x1F4C8; Historical Quality Trend &amp; Observability</h2>
+    <p class="drift-hint">
+      Enable embedded trend charts, failing expectation streaks, and schema evolution tracking by passing
+      <code>store=".validatex/runs.db"</code> to <code>vx.validate()</code> or <code>result.to_html("report.html", store=store)</code>.
+    </p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters animate delay-3">
+    <button class="filter-btn active" onclick="filterRows('all', this)">All</button>
+    <button class="filter-btn" onclick="filterRows('passed', this)">&#x2705; Passed</button>
+    <button class="filter-btn" onclick="filterRows('failed', this)">&#x274C; Failed</button>
+    <button class="filter-btn" onclick="filterRows('error', this)">&#x26A0;&#xFE0F; Errors</button>
+    <span class="filter-sep">|</span>
+    <button class="filter-btn" onclick="filterRows('critical', this)">&#x1F534; Critical</button>
+    <button class="filter-btn" onclick="filterRows('warning', this)">&#x1F7E1; Warning</button>
+    <button class="filter-btn" onclick="filterRows('info', this)">&#x1F535; Info</button>
+  </div>
+
+  <!-- Results Table -->
+  <div class="section-card animate delay-4">
+    <h2>&#x1F4CB; Expectation Results</h2>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th style="width:70px">Severity</th>
+          <th style="width:80px">Status</th>
+          <th>Expectation</th>
+          <th>Column</th>
+          <th>Observed</th>
+          <th>Unexpected</th>
+          <th style="width:60px">Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">1</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>condition_id</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-1')">View</span>
+            <div id="detail-1" class="details-content">{
+  &quot;contract_field&quot;: &quot;condition_id&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">2</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>condition_id</td>
+          <td class="obs-col">String</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-2')">View</span>
+            <div id="detail-2" class="details-content">{
+  &quot;expected_type&quot;: &quot;string&quot;,
+  &quot;actual_type&quot;: &quot;String&quot;,
+  &quot;actual_logical_type&quot;: &quot;string&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">3</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>market_start</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-3')">View</span>
+            <div id="detail-3" class="details-content">{
+  &quot;contract_field&quot;: &quot;market_start&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">4</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>market_start</td>
+          <td class="obs-col">Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-4')">View</span>
+            <div id="detail-4" class="details-content">{
+  &quot;expected_type&quot;: &quot;datetime&quot;,
+  &quot;actual_type&quot;: &quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,
+  &quot;actual_logical_type&quot;: &quot;datetime&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">5</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>market_end</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-5')">View</span>
+            <div id="detail-5" class="details-content">{
+  &quot;contract_field&quot;: &quot;market_end&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">6</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>market_end</td>
+          <td class="obs-col">Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-6')">View</span>
+            <div id="detail-6" class="details-content">{
+  &quot;expected_type&quot;: &quot;datetime&quot;,
+  &quot;actual_type&quot;: &quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,
+  &quot;actual_logical_type&quot;: &quot;datetime&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">7</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>recorded_at</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-7')">View</span>
+            <div id="detail-7" class="details-content">{
+  &quot;contract_field&quot;: &quot;recorded_at&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">8</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>recorded_at</td>
+          <td class="obs-col">Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-8')">View</span>
+            <div id="detail-8" class="details-content">{
+  &quot;expected_type&quot;: &quot;datetime&quot;,
+  &quot;actual_type&quot;: &quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,
+  &quot;actual_logical_type&quot;: &quot;datetime&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">9</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>token_up</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-9')">View</span>
+            <div id="detail-9" class="details-content">{
+  &quot;contract_field&quot;: &quot;token_up&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">10</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>token_up</td>
+          <td class="obs-col">String</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-10')">View</span>
+            <div id="detail-10" class="details-content">{
+  &quot;expected_type&quot;: &quot;string&quot;,
+  &quot;actual_type&quot;: &quot;String&quot;,
+  &quot;actual_logical_type&quot;: &quot;string&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">11</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>token_down</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-11')">View</span>
+            <div id="detail-11" class="details-content">{
+  &quot;contract_field&quot;: &quot;token_down&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">12</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>token_down</td>
+          <td class="obs-col">String</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-12')">View</span>
+            <div id="detail-12" class="details-content">{
+  &quot;expected_type&quot;: &quot;string&quot;,
+  &quot;actual_type&quot;: &quot;String&quot;,
+  &quot;actual_logical_type&quot;: &quot;string&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">13</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>volume</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-13')">View</span>
+            <div id="detail-13" class="details-content">{
+  &quot;contract_field&quot;: &quot;volume&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">14</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>volume</td>
+          <td class="obs-col">Float64</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-14')">View</span>
+            <div id="detail-14" class="details-content">{
+  &quot;expected_type&quot;: &quot;float&quot;,
+  &quot;actual_type&quot;: &quot;Float64&quot;,
+  &quot;actual_logical_type&quot;: &quot;float&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">15</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>liquidity</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-15')">View</span>
+            <div id="detail-15" class="details-content">{
+  &quot;contract_field&quot;: &quot;liquidity&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">16</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>liquidity</td>
+          <td class="obs-col">Float64</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-16')">View</span>
+            <div id="detail-16" class="details-content">{
+  &quot;expected_type&quot;: &quot;float&quot;,
+  &quot;actual_type&quot;: &quot;Float64&quot;,
+  &quot;actual_logical_type&quot;: &quot;float&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">17</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>outcome</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-17')">View</span>
+            <div id="detail-17" class="details-content">{
+  &quot;contract_field&quot;: &quot;outcome&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">18</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>outcome</td>
+          <td class="obs-col">String</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-18')">View</span>
+            <div id="detail-18" class="details-content">{
+  &quot;expected_type&quot;: &quot;string&quot;,
+  &quot;actual_type&quot;: &quot;String&quot;,
+  &quot;actual_logical_type&quot;: &quot;string&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">19</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_exist</strong></td>
+          <td>n_ticks</td>
+          <td class="obs-col">present</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-19')">View</span>
+            <div id="detail-19" class="details-content">{
+  &quot;contract_field&quot;: &quot;n_ticks&quot;
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">20</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_of_type</strong></td>
+          <td>n_ticks</td>
+          <td class="obs-col">Int64</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-20')">View</span>
+            <div id="detail-20" class="details-content">{
+  &quot;expected_type&quot;: &quot;integer&quot;,
+  &quot;actual_type&quot;: &quot;Int64&quot;,
+  &quot;actual_logical_type&quot;: &quot;integer&quot;,
+  &quot;verified&quot;: true
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">21</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>condition_id</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-21')">View</span>
+            <div id="detail-21" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">22</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>market_start</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-22')">View</span>
+            <div id="detail-22" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">23</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>market_end</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-23')">View</span>
+            <div id="detail-23" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">24</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>recorded_at</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-24')">View</span>
+            <div id="detail-24" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">25</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>token_up</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-25')">View</span>
+            <div id="detail-25" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">26</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>token_down</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-26')">View</span>
+            <div id="detail-26" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">27</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>volume</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-27')">View</span>
+            <div id="detail-27" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">28</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>liquidity</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-28')">View</span>
+            <div id="detail-28" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">29</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>n_ticks</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-29')">View</span>
+            <div id="detail-29" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">30</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>condition_id</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-30')">View</span>
+            <div id="detail-30" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">31</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_unique</strong></td>
+          <td>condition_id</td>
+          <td class="obs-col">Unique: 10/10 (100.0%)</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-31')">View</span>
+            <div id="detail-31" class="details-content">{
+  &quot;duplicate_count&quot;: 0,
+  &quot;distinct_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">32</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>market_start</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-32')">View</span>
+            <div id="detail-32" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-critical" style="border-left:4px solid var(--failure)">
+          <td class="center">33</td>
+          <td><span class="sev-badge sev-critical">CRITICAL</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_to_not_be_null</strong></td>
+          <td>market_end</td>
+          <td class="obs-col">0</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-33')">View</span>
+            <div id="detail-33" class="details-content">{
+  &quot;null_count&quot;: 0,
+  &quot;total_count&quot;: 10
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-warning" style="border-left:4px solid var(--warning)">
+          <td class="center">34</td>
+          <td><span class="sev-badge sev-warning">WARNING</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_between</strong></td>
+          <td>volume</td>
+          <td class="obs-col">Min: 18114.82  |  Max: 139404.52</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-34')">View</span>
+            <div id="detail-34" class="details-content">{
+  &quot;min_value&quot;: 0.0,
+  &quot;max_value&quot;: null,
+  &quot;strict_min&quot;: false,
+  &quot;strict_max&quot;: false
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-warning" style="border-left:4px solid var(--warning)">
+          <td class="center">35</td>
+          <td><span class="sev-badge sev-warning">WARNING</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_between</strong></td>
+          <td>liquidity</td>
+          <td class="obs-col">Min: 14343.23  |  Max: 497438.12</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-35')">View</span>
+            <div id="detail-35" class="details-content">{
+  &quot;min_value&quot;: 0.0,
+  &quot;max_value&quot;: null,
+  &quot;strict_min&quot;: false,
+  &quot;strict_max&quot;: false
+}</div>
+          </td>
+        </tr>
+
+        <tr class="row-passed row-sev-warning" style="border-left:4px solid var(--warning)">
+          <td class="center">36</td>
+          <td><span class="sev-badge sev-warning">WARNING</span></td>
+          <td><span class="badge passed">PASSED</span></td>
+          <td><strong>expect_column_values_to_be_between</strong></td>
+          <td>n_ticks</td>
+          <td class="obs-col">Min: 50  |  Max: 50</td>
+          <td><span class="dim">—</span></td>
+          <td>
+            <span class="details-toggle" onclick="toggleDetails('detail-36')">View</span>
+            <div id="detail-36" class="details-content">{
+  &quot;min_value&quot;: 0,
+  &quot;max_value&quot;: 360,
+  &quot;strict_min&quot;: false,
+  &quot;strict_max&quot;: false
+}</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Generated by <a href="#">ValidateX v1.3.0</a> &middot; 2026-10-31 05:45:23
+  </div>
+</div>
+
+<!-- Hidden data stores for download -->
+<script id="json-data" type="application/json">{
+  &quot;suite_name&quot;: &quot;polymarket_5min_markets&quot;,
+  &quot;suite_meta&quot;: {
+    &quot;version&quot;: &quot;1.0.0&quot;,
+    &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+    &quot;contract&quot;: &quot;polymarket_5min_markets&quot;,
+    &quot;contract_version&quot;: &quot;1.0.0&quot;,
+    &quot;contract_hash&quot;: &quot;37da2289802a&quot;
+  },
+  &quot;success&quot;: true,
+  &quot;statistics&quot;: {
+    &quot;total&quot;: 36,
+    &quot;passed&quot;: 36,
+    &quot;failed&quot;: 0,
+    &quot;errors&quot;: 0,
+    &quot;success_percent&quot;: 100.0,
+    &quot;overall_success&quot;: true,
+    &quot;quality_score&quot;: 100.0,
+    &quot;quality_score_scope&quot;: &quot;configured_checks_only&quot;,
+    &quot;checked_columns&quot;: 10,
+    &quot;total_columns&quot;: 14,
+    &quot;column_coverage_percent&quot;: 71.4,
+    &quot;run_time&quot;: &quot;2026-10-31T05:45:23.549860&quot;,
+    &quot;run_duration_seconds&quot;: 0.003
+  },
+  &quot;quality_score&quot;: 100.0,
+  &quot;quality_score_scope&quot;: &quot;configured_checks_only&quot;,
+  &quot;column_health&quot;: [
+    {
+      &quot;column&quot;: &quot;condition_id&quot;,
+      &quot;checks&quot;: 5,
+      &quot;passed&quot;: 5,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: 0,
+      &quot;null_percent&quot;: 0.0,
+      &quot;unique_count&quot;: 10,
+      &quot;unique_percent&quot;: 100.0
+    },
+    {
+      &quot;column&quot;: &quot;liquidity&quot;,
+      &quot;checks&quot;: 4,
+      &quot;passed&quot;: 4,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: 0,
+      &quot;null_percent&quot;: 0.0,
+      &quot;unique_count&quot;: null,
+      &quot;unique_percent&quot;: null
+    },
+    {
+      &quot;column&quot;: &quot;market_end&quot;,
+      &quot;checks&quot;: 4,
+      &quot;passed&quot;: 4,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: 0,
+      &quot;null_percent&quot;: 0.0,
+      &quot;unique_count&quot;: null,
+      &quot;unique_percent&quot;: null
+    },
+    {
+      &quot;column&quot;: &quot;market_start&quot;,
+      &quot;checks&quot;: 4,
+      &quot;passed&quot;: 4,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: 0,
+      &quot;null_percent&quot;: 0.0,
+      &quot;unique_count&quot;: null,
+      &quot;unique_percent&quot;: null
+    },
+    {
+      &quot;column&quot;: &quot;n_ticks&quot;,
+      &quot;checks&quot;: 4,
+      &quot;passed&quot;: 4,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: 0,
+      &quot;null_percent&quot;: 0.0,
+      &quot;unique_count&quot;: null,
+      &quot;unique_percent&quot;: null
+    },
+    {
+      &quot;column&quot;: &quot;outcome&quot;,
+      &quot;checks&quot;: 2,
+      &quot;passed&quot;: 2,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: null,
+      &quot;null_percent&quot;: null,
+      &quot;unique_count&quot;: null,
+      &quot;unique_percent&quot;: null
+    },
+    {
+      &quot;column&quot;: &quot;recorded_at&quot;,
+      &quot;checks&quot;: 3,
+      &quot;passed&quot;: 3,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: 0,
+      &quot;null_percent&quot;: 0.0,
+      &quot;unique_count&quot;: null,
+      &quot;unique_percent&quot;: null
+    },
+    {
+      &quot;column&quot;: &quot;token_down&quot;,
+      &quot;checks&quot;: 3,
+      &quot;passed&quot;: 3,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: 0,
+      &quot;null_percent&quot;: 0.0,
+      &quot;unique_count&quot;: null,
+      &quot;unique_percent&quot;: null
+    },
+    {
+      &quot;column&quot;: &quot;token_up&quot;,
+      &quot;checks&quot;: 3,
+      &quot;passed&quot;: 3,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: 0,
+      &quot;null_percent&quot;: 0.0,
+      &quot;unique_count&quot;: null,
+      &quot;unique_percent&quot;: null
+    },
+    {
+      &quot;column&quot;: &quot;volume&quot;,
+      &quot;checks&quot;: 4,
+      &quot;passed&quot;: 4,
+      &quot;failed&quot;: 0,
+      &quot;errors&quot;: 0,
+      &quot;health_score&quot;: 100.0,
+      &quot;null_count&quot;: 0,
+      &quot;null_percent&quot;: 0.0,
+      &quot;unique_count&quot;: null,
+      &quot;unique_percent&quot;: null
+    }
+  ],
+  &quot;data_source&quot;: null,
+  &quot;engine&quot;: &quot;polars&quot;,
+  &quot;run&quot;: {
+    &quot;run_id&quot;: null,
+    &quot;run_name&quot;: null,
+    &quot;dataset_name&quot;: &quot;polymarket_5min_markets&quot;,
+    &quot;row_count&quot;: null
+  },
+  &quot;alerts&quot;: [],
+  &quot;results&quot;: [
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;condition_id&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;condition_id&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.condition_id.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;condition_id&quot;,
+      &quot;observed_value&quot;: &quot;String&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;string&quot;,
+        &quot;actual_type&quot;: &quot;String&quot;,
+        &quot;actual_logical_type&quot;: &quot;string&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.condition_id.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;market_start&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;market_start&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.market_start.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;market_start&quot;,
+      &quot;observed_value&quot;: &quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;datetime&quot;,
+        &quot;actual_type&quot;: &quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,
+        &quot;actual_logical_type&quot;: &quot;datetime&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.market_start.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;market_end&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;market_end&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.market_end.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;market_end&quot;,
+      &quot;observed_value&quot;: &quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;datetime&quot;,
+        &quot;actual_type&quot;: &quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,
+        &quot;actual_logical_type&quot;: &quot;datetime&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.market_end.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;recorded_at&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;recorded_at&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.recorded_at.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;recorded_at&quot;,
+      &quot;observed_value&quot;: &quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;datetime&quot;,
+        &quot;actual_type&quot;: &quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,
+        &quot;actual_logical_type&quot;: &quot;datetime&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.recorded_at.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;token_up&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;token_up&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.token_up.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;token_up&quot;,
+      &quot;observed_value&quot;: &quot;String&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;string&quot;,
+        &quot;actual_type&quot;: &quot;String&quot;,
+        &quot;actual_logical_type&quot;: &quot;string&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.token_up.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;token_down&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;token_down&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.token_down.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;token_down&quot;,
+      &quot;observed_value&quot;: &quot;String&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;string&quot;,
+        &quot;actual_type&quot;: &quot;String&quot;,
+        &quot;actual_logical_type&quot;: &quot;string&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.token_down.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;volume&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;volume&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.volume.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;volume&quot;,
+      &quot;observed_value&quot;: &quot;Float64&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;float&quot;,
+        &quot;actual_type&quot;: &quot;Float64&quot;,
+        &quot;actual_logical_type&quot;: &quot;float&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.volume.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;liquidity&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;liquidity&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.liquidity.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;liquidity&quot;,
+      &quot;observed_value&quot;: &quot;Float64&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;float&quot;,
+        &quot;actual_type&quot;: &quot;Float64&quot;,
+        &quot;actual_logical_type&quot;: &quot;float&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.liquidity.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;outcome&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;outcome&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.outcome.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;outcome&quot;,
+      &quot;observed_value&quot;: &quot;String&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;string&quot;,
+        &quot;actual_type&quot;: &quot;String&quot;,
+        &quot;actual_logical_type&quot;: &quot;string&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.outcome.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_exist&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;n_ticks&quot;,
+      &quot;observed_value&quot;: &quot;present&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;contract_field&quot;: &quot;n_ticks&quot;
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.n_ticks.exists&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_of_type&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;n_ticks&quot;,
+      &quot;observed_value&quot;: &quot;Int64&quot;,
+      &quot;element_count&quot;: 0,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;expected_type&quot;: &quot;integer&quot;,
+        &quot;actual_type&quot;: &quot;Int64&quot;,
+        &quot;actual_logical_type&quot;: &quot;integer&quot;,
+        &quot;verified&quot;: true
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.n_ticks.type&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;condition_id&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.condition_id.not_null&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;market_start&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.market_start.not_null&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;market_end&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.market_end.not_null&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;recorded_at&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.recorded_at.not_null&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;token_up&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.token_up.not_null&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;token_down&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.token_down.not_null&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;volume&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.volume.not_null&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;liquidity&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.liquidity.not_null&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;n_ticks&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;schema.n_ticks.not_null&quot;,
+        &quot;source&quot;: &quot;schema&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;condition_id&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;market_operations&quot;,
+        &quot;rule_id&quot;: &quot;expect_column_to_not_be_null:condition_id&quot;,
+        &quot;source&quot;: &quot;rule&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_unique&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;condition_id&quot;,
+      &quot;observed_value&quot;: &quot;10 unique values out of 10&quot;,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;duplicate_count&quot;: 0,
+        &quot;distinct_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;market_operations&quot;,
+        &quot;rule_id&quot;: &quot;expect_column_values_to_be_unique:condition_id&quot;,
+        &quot;source&quot;: &quot;rule&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;market_start&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;market_operations&quot;,
+        &quot;rule_id&quot;: &quot;expect_column_to_not_be_null:market_start&quot;,
+        &quot;source&quot;: &quot;rule&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_to_not_be_null&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;column&quot;: &quot;market_end&quot;,
+      &quot;observed_value&quot;: 0,
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;null_count&quot;: 0,
+        &quot;total_count&quot;: 10
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;critical&quot;,
+        &quot;owner&quot;: &quot;market_operations&quot;,
+        &quot;rule_id&quot;: &quot;expect_column_to_not_be_null:market_end&quot;,
+        &quot;source&quot;: &quot;rule&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_between&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;warning&quot;,
+      &quot;column&quot;: &quot;volume&quot;,
+      &quot;observed_value&quot;: {
+        &quot;min&quot;: 18114.82,
+        &quot;max&quot;: 139404.52
+      },
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;min_value&quot;: 0.0,
+        &quot;max_value&quot;: null,
+        &quot;strict_min&quot;: false,
+        &quot;strict_max&quot;: false
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;warning&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;expect_column_values_to_be_between:volume&quot;,
+        &quot;source&quot;: &quot;rule&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_between&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;warning&quot;,
+      &quot;column&quot;: &quot;liquidity&quot;,
+      &quot;observed_value&quot;: {
+        &quot;min&quot;: 14343.23,
+        &quot;max&quot;: 497438.12
+      },
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;min_value&quot;: 0.0,
+        &quot;max_value&quot;: null,
+        &quot;strict_min&quot;: false,
+        &quot;strict_max&quot;: false
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;warning&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;expect_column_values_to_be_between:liquidity&quot;,
+        &quot;source&quot;: &quot;rule&quot;
+      }
+    },
+    {
+      &quot;expectation_type&quot;: &quot;expect_column_values_to_be_between&quot;,
+      &quot;success&quot;: true,
+      &quot;status&quot;: &quot;PASSED&quot;,
+      &quot;severity&quot;: &quot;warning&quot;,
+      &quot;column&quot;: &quot;n_ticks&quot;,
+      &quot;observed_value&quot;: {
+        &quot;min&quot;: 50,
+        &quot;max&quot;: 50
+      },
+      &quot;element_count&quot;: 10,
+      &quot;unexpected_count&quot;: 0,
+      &quot;unexpected_percent&quot;: 0.0,
+      &quot;unexpected_values&quot;: [],
+      &quot;details&quot;: {
+        &quot;min_value&quot;: 0,
+        &quot;max_value&quot;: 360,
+        &quot;strict_min&quot;: false,
+        &quot;strict_max&quot;: false
+      },
+      &quot;exception_info&quot;: null,
+      &quot;meta&quot;: {
+        &quot;severity&quot;: &quot;warning&quot;,
+        &quot;owner&quot;: &quot;prediction_market_quant&quot;,
+        &quot;rule_id&quot;: &quot;expect_column_values_to_be_between:n_ticks&quot;,
+        &quot;source&quot;: &quot;rule&quot;
+      }
+    }
+  ]
+}</script>
+<script id="csv-data" type="text/plain">#,Status,Severity,Expectation,Column,Observed,Unexpected Count,Unexpected %
+1,PASSED,critical,expect_column_to_exist,condition_id,present,0,0.00
+2,PASSED,critical,expect_column_values_to_be_of_type,condition_id,String,0,0.00
+3,PASSED,critical,expect_column_to_exist,market_start,present,0,0.00
+4,PASSED,critical,expect_column_values_to_be_of_type,market_start,&quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,0,0.00
+5,PASSED,critical,expect_column_to_exist,market_end,present,0,0.00
+6,PASSED,critical,expect_column_values_to_be_of_type,market_end,&quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,0,0.00
+7,PASSED,critical,expect_column_to_exist,recorded_at,present,0,0.00
+8,PASSED,critical,expect_column_values_to_be_of_type,recorded_at,&quot;Datetime(time_unit=&#x27;us&#x27;, time_zone=&#x27;UTC&#x27;)&quot;,0,0.00
+9,PASSED,critical,expect_column_to_exist,token_up,present,0,0.00
+10,PASSED,critical,expect_column_values_to_be_of_type,token_up,String,0,0.00
+11,PASSED,critical,expect_column_to_exist,token_down,present,0,0.00
+12,PASSED,critical,expect_column_values_to_be_of_type,token_down,String,0,0.00
+13,PASSED,critical,expect_column_to_exist,volume,present,0,0.00
+14,PASSED,critical,expect_column_values_to_be_of_type,volume,Float64,0,0.00
+15,PASSED,critical,expect_column_to_exist,liquidity,present,0,0.00
+16,PASSED,critical,expect_column_values_to_be_of_type,liquidity,Float64,0,0.00
+17,PASSED,critical,expect_column_to_exist,outcome,present,0,0.00
+18,PASSED,critical,expect_column_values_to_be_of_type,outcome,String,0,0.00
+19,PASSED,critical,expect_column_to_exist,n_ticks,present,0,0.00
+20,PASSED,critical,expect_column_values_to_be_of_type,n_ticks,Int64,0,0.00
+21,PASSED,critical,expect_column_to_not_be_null,condition_id,0,0,0.00
+22,PASSED,critical,expect_column_to_not_be_null,market_start,0,0,0.00
+23,PASSED,critical,expect_column_to_not_be_null,market_end,0,0,0.00
+24,PASSED,critical,expect_column_to_not_be_null,recorded_at,0,0,0.00
+25,PASSED,critical,expect_column_to_not_be_null,token_up,0,0,0.00
+26,PASSED,critical,expect_column_to_not_be_null,token_down,0,0,0.00
+27,PASSED,critical,expect_column_to_not_be_null,volume,0,0,0.00
+28,PASSED,critical,expect_column_to_not_be_null,liquidity,0,0,0.00
+29,PASSED,critical,expect_column_to_not_be_null,n_ticks,0,0,0.00
+30,PASSED,critical,expect_column_to_not_be_null,condition_id,0,0,0.00
+31,PASSED,critical,expect_column_values_to_be_unique,condition_id,Unique: 10/10 (100.0%),0,0.00
+32,PASSED,critical,expect_column_to_not_be_null,market_start,0,0,0.00
+33,PASSED,critical,expect_column_to_not_be_null,market_end,0,0,0.00
+34,PASSED,warning,expect_column_values_to_be_between,volume,Min: 18114.82  |  Max: 139404.52,0,0.00
+35,PASSED,warning,expect_column_values_to_be_between,liquidity,Min: 14343.23  |  Max: 497438.12,0,0.00
+36,PASSED,warning,expect_column_values_to_be_between,n_ticks,Min: 50  |  Max: 50,0,0.00
+</script>
+<script id="summary-text" type="text/plain">ValidateX Validation Report - polymarket_5min_markets
+Status: ALL PASSED
+Quality Score: 100.0 / 100
+Total: 36 | Passed: 36 | Failed: 0 | Errors: 0
+Success Rate: 100.0%
+Engine: polars
+Duration: 0.003s</script>
+
+<script>
+
+function filterRows(type, el) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.results-table tbody tr').forEach(row => {
+    if (type === 'all') { row.style.display = ''; return; }
+    // Status filters
+    if (['passed','failed','error'].includes(type)) {
+      row.style.display = row.classList.contains('row-' + type) ? '' : 'none';
+      return;
+    }
+    // Severity filters
+    row.style.display = row.classList.contains('row-sev-' + type) ? '' : 'none';
+  });
+}
+
+function toggleDetails(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function downloadJSON() {
+  const data = document.getElementById('json-data').textContent;
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = 'validatex_report.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('JSON downloaded');
+}
+
+function downloadCSV() {
+  const data = document.getElementById('csv-data').textContent;
+  const blob = new Blob([data], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = 'validatex_report.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV downloaded');
+}
+
+function copySummary() {
+  const text = document.getElementById('summary-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Summary copied to clipboard');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    ta.remove();
+    showToast('Summary copied to clipboard');
+  });
+}
+
+function showToast(msg) {
+  let t = document.getElementById('vx-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'vx-toast'; t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Animate progress bars on load
+window.addEventListener('load', () => {
+  const bar = document.querySelector('.progress-bar-fill');
+  if (bar) { const w = bar.style.width; bar.style.width = '0%'; setTimeout(() => bar.style.width = w, 200); }
+  const qbar = document.querySelector('.qs-bar-fill');
+  if (qbar) { const w = qbar.style.width; qbar.style.width = '0%'; setTimeout(() => qbar.style.width = w, 400); }
+});
+
+</script>
+</body>
+</html>

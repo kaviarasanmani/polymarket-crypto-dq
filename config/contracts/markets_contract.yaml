@@ -1,0 +1,85 @@
+contract:
+  name: polymarket_5min_markets
+  version: 1.0.0
+  description: Data contract for Polymarket 5-Minute Crypto Up/Down market resolutions and window metadata.
+
+  owner:
+    team: prediction_market_quant
+    steward: market_operations
+    contact: quant-platform@crypto-trading.internal
+
+  schema:
+    - name: condition_id
+      type: string
+      nullable: false
+    - name: market_start
+      type: timestamp
+      nullable: false
+    - name: market_end
+      type: timestamp
+      nullable: false
+    - name: recorded_at
+      type: timestamp
+      nullable: false
+    - name: token_up
+      type: string
+      nullable: false
+    - name: token_down
+      type: string
+      nullable: false
+    - name: volume
+      type: float
+      nullable: false
+    - name: liquidity
+      type: float
+      nullable: false
+    - name: outcome
+      type: string
+      nullable: true
+    - name: n_ticks
+      type: integer
+      nullable: false
+
+  quality_rules:
+    - expectation: expect_column_to_not_be_null
+      column: condition_id
+      severity: critical
+      owner: market_operations
+
+    - expectation: expect_column_values_to_be_unique
+      column: condition_id
+      severity: critical
+      owner: market_operations
+
+    - expectation: expect_column_to_not_be_null
+      column: market_start
+      severity: critical
+      owner: market_operations
+
+    - expectation: expect_column_to_not_be_null
+      column: market_end
+      severity: critical
+      owner: market_operations
+
+    - expectation: expect_column_values_to_be_between
+      column: volume
+      min_value: 0.0
+      severity: warning
+      owner: prediction_market_quant
+
+    - expectation: expect_column_values_to_be_between
+      column: liquidity
+      min_value: 0.0
+      severity: warning
+      owner: prediction_market_quant
+
+    - expectation: expect_column_values_to_be_between
+      column: n_ticks
+      min_value: 0
+      max_value: 360
+      severity: warning
+      owner: prediction_market_quant
+
+  thresholds:
+    minimum_quality_score: 95.0
+    max_critical_failures: 0

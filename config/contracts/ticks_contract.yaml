@@ -1,0 +1,98 @@
+contract:
+  name: polymarket_1hz_ticks
+  version: 1.0.0
+  description: High-frequency 1Hz order-book snapshot data contract for Polymarket prediction markets.
+
+  owner:
+    team: prediction_market_quant
+    steward: market_operations
+    contact: quant-platform@crypto-trading.internal
+
+  schema:
+    - name: condition_id
+      type: string
+      nullable: false
+    - name: t
+      type: integer
+      nullable: false
+    - name: ts_utc
+      type: timestamp
+      nullable: false
+    - name: bu
+      type: float
+      nullable: false
+    - name: au
+      type: float
+      nullable: false
+    - name: bd
+      type: float
+      nullable: false
+    - name: ad
+      type: float
+      nullable: false
+    - name: su
+      type: float
+      nullable: true
+    - name: sd
+      type: float
+      nullable: true
+    - name: sau
+      type: float
+      nullable: true
+    - name: sad
+      type: float
+      nullable: true
+    - name: du
+      type: float
+      nullable: true
+    - name: dd
+      type: float
+      nullable: true
+
+  quality_rules:
+    - expectation: expect_column_to_not_be_null
+      column: condition_id
+      severity: critical
+      owner: market_operations
+
+    - expectation: expect_column_to_not_be_null
+      column: t
+      severity: critical
+      owner: market_operations
+
+    - expectation: expect_column_to_not_be_null
+      column: ts_utc
+      severity: critical
+      owner: market_operations
+
+    - expectation: expect_column_values_to_be_between
+      column: bu
+      min_value: 0.0
+      max_value: 1.0
+      severity: critical
+      owner: prediction_market_quant
+
+    - expectation: expect_column_values_to_be_between
+      column: au
+      min_value: 0.0
+      max_value: 1.0
+      severity: critical
+      owner: prediction_market_quant
+
+    - expectation: expect_column_values_to_be_between
+      column: bd
+      min_value: 0.0
+      max_value: 1.0
+      severity: critical
+      owner: prediction_market_quant
+
+    - expectation: expect_column_values_to_be_between
+      column: ad
+      min_value: 0.0
+      max_value: 1.0
+      severity: critical
+      owner: prediction_market_quant
+
+  thresholds:
+    minimum_quality_score: 95.0
+    max_critical_failures: 0
